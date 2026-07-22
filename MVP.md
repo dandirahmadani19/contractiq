@@ -214,11 +214,11 @@ Acceptance criterion for M0 is: **fresh clone → `pnpm i && pnpm dev` boots web
 - **Rules**: ADR-026, ADR-014
 - **Verify**: `pnpm --filter @contractiq/llm test:providers:gemini` sends a hello prompt, gets a completion, validates schema.
 
-### T-021: packages/llm — Claude adapter + Groq adapter
+### T-021: packages/llm — Groq adapter (free-tier fallback) + Claude adapter (paid-tier primary)
 - **Deps**: T-020 · **Est**: M
-- **Files**: `packages/llm/src/providers/{claude,groq}.ts`
-- **Rules**: ADR-012
-- **Verify**: Same integration test suite as T-020 passes for both providers.
+- **Files**: `packages/llm/src/providers/{groq,claude}.ts`
+- **Rules**: ADR-026
+- **Verify**: Same integration test suite as T-020 passes for both providers; `LLM_TIER=paid` routing test also passes.
 
 ### T-022: OpenTelemetry SDK + Grafana Cloud OTLP exporter
 - **Deps**: T-011 · **Est**: M
