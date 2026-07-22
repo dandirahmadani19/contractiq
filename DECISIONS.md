@@ -26,7 +26,7 @@ rule files.
 | ADR-009  | Cache & queue: Upstash Redis + BullMQ              | Accepted |
 | ADR-010  | Authentication: Better Auth (self-hosted)          | Accepted |
 | ADR-011  | Multi-tenancy: workspace-scoped rows + RLS pattern | Accepted |
-| ADR-012  | LLM provider strategy: abstraction + fallback      | Accepted |
+| ADR-012  | LLM provider strategy: abstraction + fallback      | Superseded by ADR-026 |
 | ADR-013  | RAG strategy: contextual retrieval + hybrid + rerank | Accepted |
 | ADR-014  | Prompt caching + structured output                 | Accepted |
 | ADR-015  | UI foundation: Radix Primitives (no shadcn)        | Accepted |
@@ -40,6 +40,9 @@ rule files.
 | ADR-023  | Documentation: Nextra                              | Accepted |
 | ADR-024  | Deployment stack: free-tier first                  | Accepted |
 | ADR-025  | Product language: bilingual EN + ID                | Accepted |
+| ADR-026  | LLM strategy: free-tier first, paid tier opt-in    | Accepted |
+
+---
 
 ---
 
@@ -339,7 +342,7 @@ does not leak tenants.
 
 ## ADR-012: LLM provider strategy — abstraction + fallback
 
-**Status**: Accepted &nbsp;·&nbsp; **Date**: 2026-07-21
+**Status**: Superseded by ADR-026 (2026-07-21) &nbsp;·&nbsp; **Date**: 2026-07-21
 
 **Decision**: `packages/llm` defines a `LLMProvider` interface
 with methods `complete`, `stream`, `embed`, `rerank`. Concrete
@@ -726,6 +729,100 @@ demonstrates multilingual AI-native design.
 **Consequences**:
 - (+) Real-world relevance for BRI-adjacent market.
 - (–) Doubles the eval dataset effort; prompt tuning must cover both.
+
+**Cannot change without**: New ADR.
+
+---
+
+## ADR-026: LLM strategy — free-tier first, paid tier opt-in
+
+**Status**: Accepted &nbsp;·&nbsp; **Date**: 2026-07-21 &nbsp;·&nbsp; **Supersedes**: ADR-012
+
+**Context**: ADR-012 defined a split strategy (Gemini in dev, Claude
+Haiku in prod). During implementation review we reprioritized cost:
+zero-revenue portfolio project should not require any paid provider
+to run in production. Paid providers may be enabled as an optional
+quality upgrade.
+
+**Options considered**:
+1. Keep ADR-012 as-is (paid default in prod) — rejected: contradicts
+   ADR-024 free-tier posture.
+2. Free-tier for everything, remove Claude entirely — rejected:
+   loses portfolio narrative of multi-provider abstraction and
+   caps quality ceiling.
+3. **Free-tier default in every env, paid opt-in via env var — chosen.**
+
+**Decision**: `packages/llm` routes per env var `LLM_TIER=free|paid`
+(default `free`). Per-task override via
+`CIQ_LLM_OVERRIDE_<CATEGORY>=<provider>` remains from ADR-012.
+
+**Free tier (default)** — every environment:
+
+| Category            | Primary            | Fallback              |
+| ------------------- | ------------------ | --------------------- |
+| `extract`           | Gemini 2.0 Flash   | Groq (Llama 3.3 70B)  |
+| `classify`          | Gemini 2.0 Flash   | Groq                  |
+| `risk_assessment`   | Gemini 2.0 Flash   | Groq                  |
+| `summary`           | Gemini 2.0 Flash   | Groq                  |
+| `qa`                | Gemini 2.0 Flash   | Groq                  |
+| `compare`           | Gemini 2.0 Flash   | Groq                  |
+| `redline`           | Gemini 2.0 Flash   | Groq                  |
+| `search_rewrite`    | Gemini 2.0 Flash   | Groq                  |
+| `contextualize`     | Gemini 2.0 Flash   | Groq                  |
+| `judge`             | Groq (Llama 3.3)   | Gemini 2.0 Flash      |
+
+Judge intentionally routes to Groq (different provider from
+generation) to preserve the R300.8 intent that judge ≠ generator.
+The fallback direction inverts for `judge`.
+
+**Paid tier (opt-in via `LLM_TIER=paid`)**:
+
+| Category            | Primary            | Fallback              |
+| ------------------- | ------------------ | --------------------- |
+| `extract`           | Gemini 2.0 Flash   | Groq                  |
+| `classify`          | Gemini 2.0 Flash   | Groq                  |
+| `risk_assessment`   | Claude Haiku 4.5   | Gemini 2.0 Flash      |
+| `summary`           | Claude Haiku 4.5   | Gemini 2.0 Flash      |
+| `qa`                | Claude Haiku 4.5   | Gemini 2.0 Flash      |
+| `compare`           | Claude Haiku 4.5   | Gemini 2.0 Flash      |
+| `redline`           | Claude Haiku 4.5   | Gemini 2.0 Flash      |
+| `search_rewrite`    | Gemini 2.0 Flash   | Groq                  |
+| `contextualize`     | Gemini 2.0 Flash   | Groq                  |
+| `judge`             | Claude Haiku 4.5   | Gemini 2.0 Flash      |
+
+Quality-sensitive tasks route to Claude; high-volume, cheap tasks
+stay on Gemini to keep cost bounded.
+
+**Rationale**:
+- Zero baseline cost, aligned with ADR-024.
+- Portfolio narrative preserved: provider abstraction is
+  demonstrable via the tier switch itself, not by mandating paid.
+- Paid tier remains a one-env-var toggle for demo days or
+  benchmarking; not a code change.
+- Golden dataset (R300.9) can run under either tier to compare
+  quality vs cost tradeoff — this itself is a `learning_docs/`
+  artifact worth having.
+
+**Consequences**:
+- (+) Anyone can clone and run the full stack for $0.
+- (+) Quality upgrade path exists without refactor.
+- (–) Quality thresholds in R300.9 must be calibrated against Gemini
+  Flash baseline, not Claude Haiku. If a threshold is unreachable on
+  free tier, adjust threshold (via ADR) or scope task-category
+  quality expectations, not silently switch tiers.
+- (–) Groq free tier has strict rate limits; if hit, fallback loops
+  back to Gemini — potential circular fallback avoided by never
+  fallback-of-fallback (single hop only, per R500.21).
+- (–) Rate limits on both Gemini and Groq mean paid tier may still
+  be needed for load testing (R300.16) at scale.
+
+**Migration from ADR-012**:
+- No code migration; `packages/llm` was never implemented against
+  the old matrix (implementation begins at T-020).
+- T-020, T-021 file specs unchanged (adapters exist regardless of
+  routing).
+- R500.3 table (Per-Task Model Selection) updated in same commit
+  as this ADR.
 
 **Cannot change without**: New ADR.
 

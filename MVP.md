@@ -208,10 +208,10 @@ Acceptance criterion for M0 is: **fresh clone → `pnpm i && pnpm dev` boots web
 - **Rules**: ADR-007, ADR-011
 - **Verify**: Create a test collection with dummy vector; query with workspace filter returns it; query with wrong workspace returns empty.
 
-### T-020: packages/llm — LLMProvider interface + Gemini adapter (dev default)
+### T-020: packages/llm — LLMProvider interface + Gemini adapter (primary in free tier)
 - **Deps**: T-005 · **Est**: L
 - **Files**: `packages/llm/src/{providers,agent,cache,schemas}/*`
-- **Rules**: ADR-012, ADR-014
+- **Rules**: ADR-026, ADR-014
 - **Verify**: `pnpm --filter @contractiq/llm test:providers:gemini` sends a hello prompt, gets a completion, validates schema.
 
 ### T-021: packages/llm — Claude adapter + Groq adapter

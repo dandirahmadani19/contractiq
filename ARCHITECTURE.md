@@ -390,18 +390,24 @@ export interface LLMProvider {
 }
 ```
 
-Provider selection:
+Provider selection (per ADR-026):
 
-1. Read env var `LLM_PROVIDER` (dev default: `gemini`, prod default: `claude`).
-2. Read per-task overrides (e.g. `RISK_ANALYSIS_PROVIDER=claude`).
-3. Instantiate via awilix container with capability check —
+1. Read env var `LLM_TIER` (default `free`, opt-in `paid`).
+2. Resolve per-task primary + fallback from the tier's routing table
+   (R500.3).
+3. Read per-task overrides (e.g. `CIQ_LLM_OVERRIDE_QA=claude`).
+4. Instantiate via awilix container with capability check —
    caller declares required capabilities, adapter refuses if missing.
 
-Fallback rules (dev vs prod configured in `container.ts`):
+Fallback rules:
 
-- On rate limit or 5xx: retry once, then fall back to secondary.
-- On schema validation failure: repair prompt, then fall back.
-- On timeout: no fallback (retries only), fail fast.
+- On rate limit (429) or 5xx: retry once, then fall back to
+  secondary (single hop only — no cascade of fallbacks).
+- On timeout: no retry, fall back to secondary.
+- On schema validation failure: repair prompt loop (R500.11), no
+  fallback.
+- On content-policy refusal: no fallback, typed task failure.
+- On auth error: fail loud at startup, never at request time.
 
 ---
 
@@ -695,11 +701,11 @@ flowchart TB
 
 Environment matrix:
 
-| Env        | Frontend        | Backend        | DB               | Notes                          |
-| ---------- | --------------- | -------------- | ---------------- | ------------------------------ |
-| local      | localhost:3000  | localhost:3001 | Docker Postgres  | Testcontainers for tests       |
-| preview    | Vercel preview  | Fly.io preview | Neon branch      | Per-PR ephemeral               |
-| production | Vercel prod     | Fly.io prod    | Neon main branch | LLM provider = Claude Haiku    |
+| Env        | Frontend        | Backend        | DB               | LLM tier default        | Notes                          |
+| ---------- | --------------- | -------------- | ---------------- | ----------------------- | ------------------------------ |
+| local      | localhost:3000  | localhost:3001 | Docker Postgres  | `free`                  | Testcontainers for tests       |
+| preview    | Vercel preview  | Fly.io preview | Neon branch      | `free`                  | Per-PR ephemeral               |
+| production | Vercel prod     | Fly.io prod    | Neon main branch | `free` (opt-in `paid`)  | ADR-026: switch via `LLM_TIER` |
 
 Regions: all services co-located in `iad`/`us-east` to minimize
 cross-region latency. Fly.io autoscale (min 1, max 3 machines)
