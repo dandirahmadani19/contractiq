@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+.turbo/
+out/
+.output/
+
+# Env files (never commit)
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+
+# Coverage & test artifacts
+coverage/
+.nyc_output/
+*.lcov
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+# Learning docs — separate private repo, MUST be ignored here
+learning_docs/
+
+# Cache
+.cache/
+.eslintcache

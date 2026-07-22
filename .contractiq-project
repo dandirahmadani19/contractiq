@@ -1,0 +1,9 @@
+# .contractiq-project — Project marker for ContractIQ scripts.
+# DO NOT DELETE. Used by ~/bin/ciq-push and other project-scoped tools
+# to verify they are running inside the ContractIQ project.
+
+name: contractiq
+version: 1
+main_repo: contractiq
+learning_repo: contractiq-learning-docs
+created: 2026-07-21
