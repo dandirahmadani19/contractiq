@@ -41,6 +41,9 @@ rule files.
 | ADR-024  | Deployment stack: free-tier first                  | Accepted |
 | ADR-025  | Product language: bilingual EN + ID                | Accepted |
 | ADR-026  | LLM strategy: free-tier first, paid tier opt-in    | Accepted |
+| ADR-027  | Advisor-only scope: carve out documentation zone   | Accepted |
+
+---
 
 ---
 
@@ -823,6 +826,93 @@ stay on Gemini to keep cost bounded.
   routing).
 - R500.3 table (Per-Task Model Selection) updated in same commit
   as this ADR.
+
+**Cannot change without**: New ADR.
+
+---
+
+## ADR-027: Advisor-only mode scope — carve out documentation zone
+
+**Status**: Accepted &nbsp;·&nbsp; **Date**: 2026-07-22 &nbsp;·&nbsp; **Amends**: R900
+
+**Context**: R900 as originally written prohibits ALL direct file
+writes by Claude. In practice this created friction for
+documentation churn (session logs, learning notes, doc typos,
+minor rule clarifications) that (a) does not affect app runtime,
+(b) benefits from fast iteration, and (c) is naturally reversible
+via git. Manual copy-paste of every doc edit slows the human
+without adding safety.
+
+**Options considered**:
+1. Keep R900 fully strict — rejected: friction for zero real
+   risk on pure documentation.
+2. Full auto-edit for any `.md`/`.mdx` file — rejected: some
+   markdown is loaded at runtime (LLM prompts, eval rubrics)
+   and directly affects app behavior. Naive `.md` allowlist
+   would break the safety intent.
+3. **Whitelist a documentation zone; keep everything else under
+   strict advisor-only — chosen.**
+
+**Decision**: R900 is amended (not superseded) by adding
+sub-rules R900.8, R900.9, R900.10.
+
+The documentation zone allows direct edits. It is a whitelist,
+not a blacklist — anything not explicitly listed defaults to
+advisor-only.
+
+**Documentation zone (auto-edit permitted)**:
+- Root project docs: `README.md`, `CONTRIBUTING.md`,
+  `SECURITY.md`, `DECISIONS.md`, `ARCHITECTURE.md`, `MVP.md`,
+  `DESIGN.md`, `progress.md`, `CLAUDE.md`
+- `.harness/**/*.md` (all rule, prompt, checklist, example files)
+- `learning_docs/**` (private learning repo — full folder)
+- `apps/**/README.md`, `packages/**/README.md`
+- `apps/**/CHANGELOG.md`, `packages/**/CHANGELOG.md`
+- `apps/docs/content/**/*.mdx` (docs site content)
+- `apps/**/*.docs.mdx` (Storybook doc pages — not `.stories.tsx`)
+
+**Explicitly OUT of scope (advisor-only remains)**:
+- All source code: `.ts`, `.tsx`, `.js`, `.jsx`
+- Config: `package.json`, `pnpm-workspace.yaml`, `turbo.json`,
+  `tsconfig*.json`, `biome.json`, `lefthook.yml`,
+  `commitlint.config.ts`, `.npmrc`, `.env*`
+- Schema & migrations: `packages/db/schema.prisma`,
+  `packages/db/migrations/**`
+- **Runtime-loaded markdown**: `packages/llm/src/prompts/**/*.md`,
+  `packages/evals/rubrics/**/*.md`, `packages/evals/golden/**`
+  (these are read by the app at runtime; edits change behavior)
+- Test files: `*.test.ts`, `*.tenant.test.ts`, `*.vcr.test.ts`,
+  `*.property.test.ts`, `*.integration.test.ts`, `*.stories.tsx`,
+  `*.e2e.ts`
+- CI/CD: `.github/**`, `Dockerfile`, `fly.toml`, `vercel.json`
+- Scripts, tooling: `tooling/scripts/**`, `*.sh`,
+  `~/bin/ciq-push`
+
+**Rationale**:
+- Runtime effect = advisor-only (safety posture preserved).
+- Documentation = auto-edit (removes friction, git-reversible).
+- Whitelist over blacklist: safer default when new file types
+  appear.
+- Explicit runtime-loaded markdown carve-out closes the naive
+  ".md is safe" loophole.
+
+**Consequences**:
+- (+) Session logs, progress tracking, learning notes update
+  organically during coding.
+- (+) Doc typos and rule clarifications fixable in flight.
+- (+) Manual copy-paste ceremony eliminated for docs.
+- (–) Whitelist is more nuanced than "all advisor-only" — must
+  be remembered.
+- (–) Constitutional docs (R900 itself, ADRs, MVP task list) are
+  in the whitelist; R900.10 mitigates this by requiring propose
+  step for non-trivial edits to those files.
+- (–) Trust delegated to Sonnet for doc quality; if Sonnet
+  drift is observed in doc zone, R900.10 tightens (or a new ADR
+  narrows the whitelist).
+
+**Migration**: R900.8, R900.9, R900.10 added in same commit as
+this ADR. This ADR itself was executed under OLD R900 (manual
+apply); starting from the next commit, new convention active.
 
 **Cannot change without**: New ADR.
 

@@ -108,3 +108,92 @@ If at any point the agent notices it has already violated R900
 
 Never try to "undo" the violation autonomously — that is another
 mutation.
+
+## R900.8 — Documentation Zone (Auto-Edit Permitted)
+
+Per ADR-027, R900.1's blanket write ban is narrowed. The agent
+MAY directly edit, create, or delete files inside the
+documentation zone without a separate propose step.
+
+**Documentation zone whitelist**:
+- Root docs: `README.md`, `CONTRIBUTING.md`, `SECURITY.md`,
+  `DECISIONS.md`, `ARCHITECTURE.md`, `MVP.md`, `DESIGN.md`,
+  `progress.md`, `CLAUDE.md`
+- `.harness/**/*.md`
+- `learning_docs/**`
+- `apps/**/README.md`, `packages/**/README.md`
+- `apps/**/CHANGELOG.md`, `packages/**/CHANGELOG.md`
+- `apps/docs/content/**/*.mdx`
+- `apps/**/*.docs.mdx` (docs pages, not `.stories.tsx`)
+
+When editing in the documentation zone, the agent MUST:
+- Cite the ADR (`ADR-###`) or rule (`R###`) that motivates the
+  edit, in commit message body or file diff comment.
+- Commit the change with a proper `docs:` or `docs(<scope>):`
+  Conventional Commits type (per R200.2, R200.3).
+- Summarize the edit in one line at the end of the response so
+  the human can spot-check quickly.
+
+The agent MUST NOT:
+- Edit any file NOT on the whitelist under this rule — such
+  edits still require R900.1–.4 (advisor-only propose).
+- Delete files even in the doc zone without explicit human
+  confirmation.
+- Batch a doc-zone edit and a runtime-zone edit in the same
+  turn without going through R900.1–.4 for the runtime part.
+
+## R900.9 — Runtime & Code Zone (Advisor-Only Remains)
+
+Everything not on R900.8's whitelist is treated as runtime-
+affecting and remains under strict advisor-only rules
+(R900.1–.4). Non-exhaustive examples:
+
+- All source code: `.ts`, `.tsx`, `.js`, `.jsx`
+- Config: `package.json`, `pnpm-workspace.yaml`, `turbo.json`,
+  `tsconfig*.json`, `biome.json`, `lefthook.yml`,
+  `commitlint.config.ts`, `.npmrc`, `.env*`
+- Schema & migrations: `packages/db/schema.prisma`,
+  `packages/db/migrations/**`
+- **Runtime-loaded markdown**: `packages/llm/src/prompts/**/*.md`,
+  `packages/evals/rubrics/**/*.md`, `packages/evals/golden/**`
+- Test files: `*.test.ts`, `*.tenant.test.ts`, `*.vcr.test.ts`,
+  `*.property.test.ts`, `*.integration.test.ts`, `*.stories.tsx`,
+  `*.e2e.ts`
+- CI/CD: `.github/**`, `Dockerfile`, `fly.toml`, `vercel.json`
+- Scripts, tooling: `tooling/scripts/**`, `*.sh`
+
+Rule of thumb: if the file is READ or EXECUTED by the running
+app, tests, build, or infrastructure, it is runtime — advisor-
+only. If uncertain whether a file is in the documentation zone
+or the runtime zone, treat it as runtime and ask.
+
+## R900.10 — Constitutional Edits (Extra Care in Doc Zone)
+
+Some files in R900.8's whitelist are constitutional — they
+define how the project is governed. The agent MAY edit them
+under R900.8, but MUST propose the change and wait for human
+confirmation before applying when the change is **non-trivial**.
+
+Constitutional files:
+- `DECISIONS.md`
+- `.harness/rules/**/*.md`
+- `CLAUDE.md`
+- `MVP.md`
+
+**Trivial edits (auto-apply OK)**:
+- Typo, grammar, or Markdown-syntax fixes.
+- Formatting cleanups (whitespace, list marker consistency).
+- Adding cross-reference links between existing sections.
+- Appending session log entries in `progress.md`.
+- Marking a task `[✓]` in `MVP.md` after verification success
+  (state update, not content change).
+
+**Non-trivial edits (propose first)**:
+- Adding, editing, or superseding an ADR.
+- Adding, editing, or removing a rule sub-clause.
+- Renumbering, restructuring, or changing meaning of any section.
+- Changing acceptance criteria (`AC-F#.#`) or task shape.
+
+When in doubt, propose first. The extra ceremony for
+constitutional edits is small; the cost of a silent
+constitutional change is compounding.
