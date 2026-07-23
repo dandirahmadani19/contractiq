@@ -17,12 +17,12 @@ selesai dengan update file ini.
 
 ## Current Task
 
-**Next up: T-001 — Init pnpm workspaces + Turborepo.**
+**Next up: T-002 — Root Biome + editorconfig + gitattributes.**
 
-- Dependencies: none
+- Dependencies: T-001 ✓
 - Est: S (≤ 1h focused)
-- Files: `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `.npmrc`
-- Full spec: see `MVP.md#T-001` for verification steps
+- Files: `biome.json`, `.editorconfig`, `.gitattributes`
+- Full spec: see `MVP.md#T-002` for verification steps
 
 ## Session Log
 
@@ -33,6 +33,22 @@ Session log format:
 - Next action
 
 Newest entries at top.
+
+### 2026-07-22 — T-001 done + R900 amended via ADR-027
+
+- **T-001 ✓** — pnpm workspaces + Turborepo initialized.
+  Verified: `pnpm --version` = 9.15.0, `pnpm turbo --version` =
+  2.10.6, `pnpm ls -r --depth -1` shows root package
+  `contractiq@0.0.0` (workspace members not yet created, expected).
+- **ADR-027** — R900 amended: documentation zone auto-edit
+  permitted (R900.8), runtime zone advisor-only remains
+  (R900.9), constitutional edits require propose step (R900.10).
+  Rationale: friction reduction for doc churn without weakening
+  runtime safety.
+- **Transition point**: this is the last batch executed under
+  OLD R900. From next task (T-002) onward, new convention
+  active — Sonnet may auto-edit doc zone.
+- **Next**: T-002 (Biome + editorconfig + gitattributes).
 
 ### 2026-07-22 — Foundation complete, ready for coding
 
