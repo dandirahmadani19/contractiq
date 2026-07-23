@@ -53,4 +53,14 @@ sessions; re-priming keeps output consistent.
 - Stack, decisions, and constraints: `DECISIONS.md`.
 - Feature scope and acceptance criteria: `MVP.md`.
 - Design tokens and UI rules: `DESIGN.md` + `.harness/rules/R6XX-*.md`.
-- Current status: `progress.md`.
+
+## Current State (READ THIS FIRST)
+
+Every session starts by reading `progress.md`. It tells you:
+- What milestone we are in.
+- Which task (`T-###`) is in progress or next.
+- What the last session did and what to pick up.
+- Any blockers or open questions.
+
+If `progress.md` is empty or missing, we are at project start;
+begin with `T-001` per `MVP.md`.
