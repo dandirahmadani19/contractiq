@@ -14,6 +14,9 @@ importers:
       turbo:
         specifier: ^2.3.0
         version: 2.10.6
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
 
 packages:
 
@@ -104,6 +107,11 @@ packages:
     resolution: {integrity: sha512-3VfH7fK7WQ/ZHYjvfWyVnPRpcNaX3ZqXfGDMdc82eGdM0ESATyxFK4R4PM3wNsVFsdkUFZ4pZpkNeG37dxOv+g==}
     hasBin: true
 
+  typescript@5.9.3:
+    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
 snapshots:
 
   '@biomejs/biome@1.9.4':
@@ -167,3 +175,5 @@ snapshots:
       '@turbo/linux-arm64': 2.10.6
       '@turbo/windows-64': 2.10.6
       '@turbo/windows-arm64': 2.10.6
+
+  typescript@5.9.3: {}

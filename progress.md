@@ -17,12 +17,12 @@ selesai dengan update file ini.
 
 ## Current Task
 
-**Next up: T-003 — Root TypeScript config + strict flags.**
+**Next up: T-004 — packages/config (shared configs).**
 
-- Dependencies: T-002 ✓
+- Dependencies: T-003 ✓
 - Est: S (≤ 1h focused)
-- Files: `tsconfig.base.json`, `tsconfig.json`
-- Full spec: see `MVP.md#T-003` for verification steps
+- Files: `packages/config/tsconfig/*.json`, `packages/config/biome/*.json`, `packages/config/tailwind/*.ts`
+- Full spec: see `MVP.md#T-004` for verification steps
 
 ## Session Log
 
@@ -33,6 +33,26 @@ Session log format:
 - Next action
 
 Newest entries at top.
+
+### 2026-07-24 — T-003 done
+
+- **T-003 ✓** — Root `tsconfig.base.json` (ADR-003 + R100.1 strict
+  flags: `strict`, `noUncheckedIndexedAccess`,
+  `exactOptionalPropertyTypes`, `noFallthroughCasesInSwitch`,
+  `noImplicitOverride`, `forceConsistentCasingInFileNames`,
+  `isolatedModules`) and root `tsconfig.json` (extends base,
+  empty `include` — no source files exist yet) created.
+  `typescript@5.9.3` added as workspace devDependency.
+- **Gotcha**: `tsc -p tsconfig.base.json` errors `TS18003: No
+  inputs were found` when run directly, since the base config has
+  no `include` and no `.ts` files exist yet in the repo — expected,
+  base config is only meant to be consumed via `extends`. Verified
+  flags by reading the file directly instead of via `tsc --showConfig`.
+  Also noted: the `rtk` proxy's filtered summary misreported this
+  `tsc` error as "No errors found" — cross-check `rtk proxy` /
+  raw log output when a `tsc` result looks suspicious.
+- **Next**: T-004 (`packages/config` — shared tsconfig/biome/tailwind
+  configs consumed by downstream packages).
 
 ### 2026-07-24 — T-002 done
 
