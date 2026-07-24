@@ -17,12 +17,12 @@ selesai dengan update file ini.
 
 ## Current Task
 
-**Next up: T-002 — Root Biome + editorconfig + gitattributes.**
+**Next up: T-003 — Root TypeScript config + strict flags.**
 
-- Dependencies: T-001 ✓
+- Dependencies: T-002 ✓
 - Est: S (≤ 1h focused)
-- Files: `biome.json`, `.editorconfig`, `.gitattributes`
-- Full spec: see `MVP.md#T-002` for verification steps
+- Files: `tsconfig.base.json`, `tsconfig.json`
+- Full spec: see `MVP.md#T-003` for verification steps
 
 ## Session Log
 
@@ -33,6 +33,18 @@ Session log format:
 - Next action
 
 Newest entries at top.
+
+### 2026-07-24 — T-002 done
+
+- **T-002 ✓** — Root `biome.json`, `.editorconfig`, `.gitattributes`
+  created (R100.2, R100.5, R100.6 seeded at root; full CI-gate
+  rule set deferred to `packages/config/biome/base.json` in T-004).
+  `@biomejs/biome@1.9.4` added as workspace devDependency.
+  Verified: `pnpm biome check .` passes (zero files, exit 0).
+- Confirmed `biome.json` sits in R900.9 (runtime/config zone per
+  ADR-027) — proposed via R900.1–.4, not auto-edited.
+- **Next**: T-003 (root `tsconfig.base.json` + `tsconfig.json`,
+  per ADR-003 strict flags).
 
 ### 2026-07-22 — T-001 done + R900 amended via ADR-027
 
